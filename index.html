@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수정 델파이 4라운드 설문지 — 축소 라운드</title>
+<style>
+:root {
+  --primary: #2C3E50;
+  --blue: #3B82F6;
+  --blue-soft: #EFF6FF;
+  --green: #10B981;
+  --green-soft: #ECFDF5;
+  --amber: #F59E0B;
+  --amber-soft: #FFFBEB;
+  --red: #EF4444;
+  --red-soft: #FEF2F2;
+  --surface: #FAFAF8;
+  --border: #E5E3DF;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --card-bg: #FFFFFF;
+  --accent: #E74C3C;
+  --success: #27AE60;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:var(--surface); color:var(--text-primary); line-height:1.7; font-size:15px; }
+
+/* Progress */
+.progress-container { position:fixed; top:0; left:0; right:0; background:var(--card-bg); border-bottom:1px solid var(--border); z-index:100; display:flex; align-items:center; padding:12px 20px; gap:12px; }
+.progress-label { font-size:12px; font-weight:700; color:var(--blue); min-width:36px; }
+.progress-bar { flex:1; height:6px; background:#E5E7EB; border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--blue),#60A5FA); border-radius:3px; transition:width 0.4s ease; width:0%; }
+.progress-pages { font-size:12px; font-weight:600; color:var(--text-secondary); min-width:44px; text-align:right; }
+
+/* Layout */
+.survey-wrapper { max-width:760px; margin:0 auto; padding:70px 20px 100px; }
+.survey-header { text-align:center; padding:40px 24px; margin-bottom:28px; background:var(--card-bg); border-radius:16px; border:1px solid var(--border); }
+.uni-badge { display:inline-block; font-size:12px; font-weight:600; color:var(--text-secondary); letter-spacing:0.5px; margin-bottom:16px; padding:6px 16px; background:var(--surface); border-radius:20px; border:1px solid var(--border); }
+.survey-header h1 { font-size:22px; font-weight:700; color:var(--primary); line-height:1.5; margin-bottom:8px; }
+.survey-header .subtitle { font-size:14px; color:var(--text-secondary); font-weight:400; }
+.researcher-info { font-size:13px; color:var(--text-muted); line-height:1.8; }
+
+/* Cards */
+.section-card { background:var(--card-bg); border-radius:12px; border:1px solid var(--border); padding:28px 24px; margin-bottom:20px; }
+.section-title { font-size:17px; font-weight:700; color:var(--primary); margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--blue); }
+.section-subtitle { font-size:15px; font-weight:600; color:var(--text-primary); margin:20px 0 10px; }
+
+/* Info boxes */
+.info-box { background:var(--blue-soft); border-left:3px solid var(--blue); padding:14px 16px; border-radius:0 8px 8px 0; font-size:14px; line-height:1.8; margin:12px 0; }
+.warning-box { background:var(--amber-soft); border-left:3px solid var(--amber); padding:14px 16px; border-radius:0 8px 8px 0; font-size:14px; line-height:1.8; margin:12px 0; }
+.red-box { background:var(--red-soft); border-left:3px solid var(--red); padding:14px 16px; border-radius:0 8px 8px 0; font-size:14px; line-height:1.8; margin:12px 0; }
+
+/* Tables */
+.ref-table { width:100%; border-collapse:collapse; font-size:13px; margin:12px 0; }
+.ref-table th { background:var(--primary); color:#fff; padding:10px 12px; text-align:center; font-weight:600; }
+.ref-table td { padding:10px 12px; border-bottom:1px solid var(--border); text-align:center; }
+.ref-table tr:nth-child(even) td { background:var(--surface); }
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+/* Likert */
+.likert-group { margin:16px 0; }
+.likert-item { padding:20px 0; border-bottom:1px solid #F0EFEC; }
+.likert-item:last-child { border-bottom:none; }
+.item-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:14px; }
+.item-code { font-size:12px; font-weight:600; color:var(--blue); background:var(--blue-soft); padding:3px 8px; border-radius:4px; white-space:nowrap; margin-top:2px; }
+.item-text { flex:1; font-size:14px; line-height:1.7; }
+.item-quote { font-size:14px; line-height:1.7; color:var(--text-primary); background:var(--surface); padding:12px 16px; border-radius:8px; border:1px solid var(--border); margin-bottom:14px; font-weight:500; }
+.likert-scale { display:flex; justify-content:space-between; gap:4px; }
+.likert-option { flex:1; text-align:center; }
+.likert-option input[type="radio"] { display:none; }
+.likert-btn { display:block; padding:14px 4px; border:1.5px solid var(--border); border-radius:8px; cursor:pointer; font-size:13px; font-weight:500; color:var(--text-secondary); transition:all 0.2s; background:var(--card-bg); }
+.likert-btn:hover { border-color:var(--blue); color:var(--blue); background:var(--blue-soft); }
+.likert-option input:checked + .likert-btn { background:var(--blue); color:#fff; border-color:var(--blue); font-weight:700; }
+.likert-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); margin-top:6px; padding:0 4px; }
+
+/* Buttons */
+.nav-buttons { display:flex; justify-content:space-between; margin-top:28px; padding-top:20px; border-top:1px solid var(--border); }
+.btn { padding:12px 28px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.btn-next { background:var(--blue); color:#fff; }
+.btn-next:hover { background:#2563EB; }
+.btn-prev { background:var(--surface); color:var(--text-secondary); border:1px solid var(--border); }
+.btn-prev:hover { background:#E5E7EB; }
+.btn-submit { background:var(--success); color:#fff; padding:14px 36px; font-size:15px; }
+.btn-submit:hover { background:#219653; }
+
+/* Pages */
+.survey-page { display:none; }
+.survey-page.active { display:block; }
+
+/* Consent */
+.consent-box { display:flex; align-items:flex-start; gap:10px; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin:12px 0; }
+.consent-box input { width:18px; height:18px; margin-top:2px; flex-shrink:0; }
+
+/* Toast */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:12px 24px; border-radius:8px; font-size:14px; opacity:0; transition:opacity 0.3s; z-index:200; pointer-events:none; max-width:90vw; text-align:center; }
+.toast.show { opacity:1; }
+
+/* Textarea */
+textarea { width:100%; min-height:100px; padding:12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; line-height:1.7; resize:vertical; }
+textarea:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
+
+/* Input text */
+input[type="text"] { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; }
+input[type="text"]:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
+
+/* Collapsible */
+details { margin:8px 0; }
+summary { cursor:pointer; font-weight:600; font-size:13px; color:var(--blue); padding:8px 0; list-style:none; }
+summary::-webkit-details-marker { display:none; }
+summary::before { content:'▸ '; font-size:12px; transition:transform 0.2s; }
+details[open] summary::before { content:'▾ '; }
+details[open] summary { margin-bottom:8px; }
+
+/* Completion */
+.completion { text-align:center; padding:60px 20px; }
+.completion h2 { color:var(--success); margin-bottom:12px; font-size:24px; }
+.completion p { color:var(--text-secondary); font-size:15px; }
+
+/* Set item list */
+.set-items { margin:10px 0; padding:0; }
+.set-items li { list-style:none; padding:8px 12px; border-bottom:1px solid #F0EFEC; font-size:14px; line-height:1.7; }
+.set-items li:last-child { border-bottom:none; }
+.set-items li::before { content:'• '; color:var(--text-muted); }
+.set-label { display:inline-block; font-size:11px; font-weight:600; padding:2px 6px; border-radius:4px; margin-left:6px; }
+.set-label-pass { background:var(--green-soft); color:var(--green); }
+
+/* Responsive */
+@media (max-width:640px) {
+  .survey-wrapper { padding:70px 12px 100px; }
+  .section-card { padding:24px 18px; }
+  .survey-header { padding:32px 20px; }
+  .survey-header h1 { font-size:18px; }
+  .likert-option .likert-btn { padding:12px 2px; font-size:12px; }
+  .btn { padding:12px 24px; font-size:13px; }
+  .item-header { flex-direction:column; }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="progress-container">
+  <span class="progress-label" id="progressLabel">0%</span>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="progress-pages" id="progressPages">1 / 6</span>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="survey-wrapper">
+  <div class="survey-header">
+    <div class="uni-badge">홍익대학교 일반대학원 · 박사학위논문 연구</div>
+    <h1>뉴스그래픽의 생성형 AI 활용에 대한<br>수용자 저항 요인</h1>
+    <div class="subtitle">— 혁신저항모델과 저널리즘 신뢰성 이론을 중심으로 —</div>
+    <div class="subtitle" style="font-size:14px;color:var(--text-primary);font-weight:500;margin-top:8px;">수정 델파이(Modified Delphi) 4라운드 설문지 — 축소 라운드</div>
+    <div style="height:16px;"></div>
+    <div class="researcher-info">연구자 : 홍익대학교 일반대학원 AI·실감미디어콘텐츠학 박사과정 류종원 &nbsp;|&nbsp; 지도교수: 한정엽<br>이메일: gongkar@gmail.com &nbsp;|&nbsp; 연락처: 010-9362-5763</div>
+  </div>
+
+  <!-- ═══ PAGE 0: 동의 ═══ -->
+  <div class="survey-page active" data-page="0">
+    <div class="section-card">
+      <div class="section-title">4라운드 안내</div>
+      <div class="info-box" style="line-height:2;">
+        안녕하십니까. 바쁘신 와중에 1·2·3라운드 모두 참여해주셔서 진심으로 감사드립니다.<br><br>
+        당초 3라운드로 종료 예정이었으나, 3라운드 검증 결과 C4(시각표현 부정연상) 구인의 측정 문항 재검증이 필요한 것으로 판단되어, 부득이하게 한 차례의 라운드를 추가로 실시하게 되었습니다. 예정에 없던 추가 요청을 드리게 되어 대단히 죄송합니다.<br><br>
+        본 4라운드는 <strong>C4 재설계 문항의 내용타당도 검증</strong>만을 목적으로 하는 축소 라운드이며, 다른 구인(C1·C2·C3·C5)에 대한 재질의는 없습니다.<br><br>
+        <strong>소요시간:</strong> 약 5~7분
+      </div>
+
+      <div class="consent-box">
+        <input type="checkbox" name="consent" value="agree" data-req="1">
+        <label>본인은 위 연구 설명을 충분히 읽었으며, 자발적으로 본 연구에 참여하는 것에 동의합니다.</label>
+      </div>
+
+      <div style="margin-top:16px;">
+        <label style="font-weight:600;">참여자 성명 <span style="color:var(--red);">*</span></label>
+        <input type="text" name="name" placeholder="성명을 입력해 주십시오." data-req="1" style="margin-top:6px;">
+      </div>
+    </div>
+    <div class="nav-buttons"><div></div><button class="btn btn-next" onclick="nextPage()">다음 →</button></div>
+  </div>
+
+  <!-- ═══ PAGE 1: 3라운드 결과 요약 ═══ -->
+  <div class="survey-page" data-page="1">
+    <div class="section-card">
+      <div class="section-title">3라운드 주요 결과</div>
+
+      <div class="table-wrap">
+        <table class="ref-table">
+          <thead>
+            <tr><th>구인</th><th>평균 CVR</th><th>통과 문항</th><th>상태</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>C1 주제선택 불확실성 연상</td><td>+0.239</td><td>4/8</td><td>🟡</td></tr>
+            <tr><td>C2 사실선택 불확실성 연상</td><td>+0.545</td><td>6/8</td><td>🟢</td></tr>
+            <tr><td>C3 시각표현 불확실성</td><td>+0.648</td><td>7/8</td><td>🟢</td></tr>
+            <tr style="background:var(--red-soft);"><td><strong>C4 시각표현 부정연상</strong></td><td><strong>−0.057</strong></td><td><strong>1/8</strong></td><td><strong>🔴 재검증</strong></td></tr>
+            <tr><td>C5 맥락판단 불확실성 연상</td><td>+0.545</td><td>5/8</td><td>🟢</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">C4 탈락 원인 분석 및 문항 재설계 방향</div>
+
+      <p style="margin-bottom:14px;">3라운드에서 유일하게 통과한 C4-1("딥페이크 같은 조작된 영상이 연상된다", CVR +0.545)은 AI에 대한 구체적인 사회적 부정 사례의 연상을 측정하는 문항이었습니다. 반면 탈락 문항 다수는 시각적 품질 비교("인위적이고 부자연스러운 느낌", "꾸며낸 것 같은 느낌")에 해당하여, 이미지 장벽(사회적으로 형성된 부정적 고정관념)의 본래 측정 목적과 괴리가 있었습니다.</p>
+
+      <p style="margin-bottom:14px;">이에 본 4라운드에서는 이미지 장벽의 원래 정의(Ram & Sheth, 1989: "고정관념적 사고에서 비롯된 지각적 문제")에 충실하게, AI에 대한 사회적 부정 연상 및 묘사정확성에 대한 부정적 기대를 측정하는 방향으로 문항을 재설계하였습니다.</p>
+
+      <div class="section-subtitle">C3(시각표현 불확실성)과의 구분</div>
+      <div class="info-box">
+        <strong>C3:</strong> AI 기술의 기능적 특성으로 인해, 시각적 묘사에 오류가 <strong>발생할 수 있다는 우려</strong><br>
+        <strong>C4:</strong> AI에 대해 사회적으로 형성된 부정적 인식으로 인해, 시각적 묘사와 관련하여 <strong>부정적 연상이 활성화</strong>되거나, 묘사의 정확성에 대해 <strong>부정적 기대</strong>를 갖는 정도
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-prev" onclick="prevPage()">← 이전</button>
+      <button class="btn btn-next" onclick="nextPage()">다음 →</button>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 2: C4 재설계 문항 CVR 평가 ═══ -->
+  <div class="survey-page" data-page="2">
+    <div class="section-card">
+      <div class="section-title">C4 재설계 문항 — 내용타당도(CVR) 평가</div>
+
+      <div class="warning-box">
+        <strong>평가 안내</strong><br>
+        아래 문항들은 일반 뉴스 소비자가 응답하는 본조사용 설문문항입니다. 각 문항이 <strong>소비자의 Gen AI 뉴스그래픽 묘사정확성에 대한 부정적 연상·기대를 측정하는 도구로서 타당한지</strong> 평가해 주십시오.<br><br>
+        ※ 전문가 본인의 동의 여부가 아니라, 일반 소비자의 부정적 연상·기대를 측정하기에 적합한 문항인지를 평가해 주십시오.
+      </div>
+
+      <div class="likert-group">
+
+        <!-- C4-R1 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R1</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽을 보면 가짜뉴스에 사용된 이미지들이 떠오른다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_1" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_1" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_1" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_1" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_1" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+
+        <!-- C4-R2 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R2</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽을 보면 AI가 만들어낸 가짜 인물 사진들이 떠오른다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_2" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_2" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_2" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_2" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_2" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+
+        <!-- C4-R3 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R3</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽을 보면 실제와 다르게 합성된 AI 이미지들이 떠오른다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_3" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_3" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_3" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_3" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_3" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+
+        <!-- C4-R4 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R4</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽을 보면 사실이 아닌 장면을 생성한 AI 이미지 사례들이 떠오른다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_4" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_4" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_4" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_4" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_4" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+
+        <!-- C4-R5 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R5</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽이 사실을 정확하게 묘사할 것이라고 기대하기 어렵다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_5" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_5" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_5" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_5" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_5" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+
+        <!-- C4-R6 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R6</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽이 사건의 모습을 있는 그대로 보여줄 것이라고 보기 어렵다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_6" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_6" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_6" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_6" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_6" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+
+        <!-- C4-R7 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R7</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽이 인물이나 장소를 실제와 같게 묘사할 것이라고 기대하기 어렵다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_7" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_7" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_7" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_7" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_7" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+
+        <!-- C4-R8 -->
+        <div class="likert-item">
+          <div class="item-header">
+            <span class="item-code">C4-R8</span>
+          </div>
+          <div class="item-quote">AI 뉴스그래픽이 사실을 과장이나 축소 없이 묘사할 것이라고 보기 어렵다.</div>
+          <div class="likert-scale">
+            <label class="likert-option"><input type="radio" name="C4R_8" value="1" data-req="1"><span class="likert-btn">1</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_8" value="2" data-req="1"><span class="likert-btn">2</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_8" value="3" data-req="1"><span class="likert-btn">3</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_8" value="4" data-req="1"><span class="likert-btn">4</span></label>
+            <label class="likert-option"><input type="radio" name="C4R_8" value="5" data-req="1"><span class="likert-btn">5</span></label>
+          </div>
+          <div class="likert-labels"><span>전혀 타당하지 않다</span><span>보통</span><span>매우 타당하다</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <label style="font-weight:600;">개방형</label>
+        <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 8px;">C4 재설계 문항에 대한 수정 의견이나 추가 문항 제안이 있으시면 기술해 주십시오.</p>
+        <textarea name="C4R_open" placeholder="의견을 입력해 주십시오. (선택)"></textarea>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-prev" onclick="prevPage()">← 이전</button>
+      <button class="btn btn-next" onclick="nextPage()">다음 →</button>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 3: C3-C4 판별가능성 ═══ -->
+  <div class="survey-page" data-page="3">
+    <div class="section-card">
+      <div class="section-title">C3–C4 문항 수준 판별가능성 평가</div>
+
+      <p style="margin-bottom:16px;">아래 [세트 A]는 3라운드에서 확정된 C3(시각표현 불확실성)의 측정 문항이고, [세트 B]는 C4(시각표현 부정연상)의 측정 문항(3라운드 통과 문항 + 본 라운드 재설계 문항)입니다.</p>
+
+      <div class="section-subtitle">세트 A — C3: 시각표현 불확실성</div>
+      <div style="background:var(--blue-soft);border:1px solid #DBEAFE;border-radius:8px;padding:4px 0;margin-bottom:16px;">
+        <ul class="set-items">
+          <li>AI 뉴스그래픽은 실제 사건이나 상황을 정확하게 묘사하지 못할 수 있다</li>
+          <li>AI 뉴스그래픽은 실제로 존재하지 않는 장면을 사실인 것처럼 묘사할 수 있다</li>
+          <li>AI 뉴스그래픽은 사실을 과장하거나 축소하여 묘사할 수 있다</li>
+          <li>AI 뉴스그래픽은 인물의 외모, 장소, 사물 등의 세부 사항에 오류가 있을 수 있다</li>
+          <li>AI 뉴스그래픽의 색상, 구도, 비례 등 시각적 요소가 실제 사실과 다를 수 있다</li>
+          <li>AI가 생성한 시각 정보의 사실 여부를 확인하기 어렵다</li>
+          <li>사실에 기반한 이미지인지 AI가 생성한 이미지인지 구분이 어려울 수 있다</li>
+        </ul>
+      </div>
+
+      <div class="section-subtitle">세트 B — C4: 시각표현 부정연상</div>
+      <div style="background:var(--amber-soft);border:1px solid #FDE68A;border-radius:8px;padding:4px 0;margin-bottom:20px;">
+        <ul class="set-items">
+          <li>AI 뉴스그래픽을 보면 딥페이크 같은 조작된 영상이 연상된다 <span class="set-label set-label-pass">3R 통과</span></li>
+          <li>AI 뉴스그래픽을 보면 가짜뉴스에 사용된 이미지들이 떠오른다</li>
+          <li>AI 뉴스그래픽을 보면 AI가 만들어낸 가짜 인물 사진들이 떠오른다</li>
+          <li>AI 뉴스그래픽을 보면 실제와 다르게 합성된 AI 이미지들이 떠오른다</li>
+          <li>AI 뉴스그래픽을 보면 사실이 아닌 장면을 생성한 AI 이미지 사례들이 떠오른다</li>
+          <li>AI 뉴스그래픽이 사실을 정확하게 묘사할 것이라고 기대하기 어렵다</li>
+          <li>AI 뉴스그래픽이 사건의 모습을 있는 그대로 보여줄 것이라고 보기 어렵다</li>
+          <li>AI 뉴스그래픽이 인물이나 장소를 실제와 같게 묘사할 것이라고 기대하기 어렵다</li>
+          <li>AI 뉴스그래픽이 사실을 과장이나 축소 없이 묘사할 것이라고 보기 어렵다</li>
+        </ul>
+      </div>
+
+      <div class="section-subtitle">판별가능성 평가</div>
+      <p style="margin-bottom:14px;">위 두 세트의 문항들은 일반 소비자를 대상으로 한 설문에서 '시각적 묘사에 대한 <strong>기능적 불확실성</strong>(세트 A)'과 '시각적 묘사에 대한 <strong>부정적 연상</strong>(세트 B)'으로 구분하여 측정할 수 있다고 보십니까?</p>
+
+      <div class="likert-scale" style="max-width:500px;">
+        <label class="likert-option"><input type="radio" name="C3C4_disc" value="1" data-req="1"><span class="likert-btn">1</span></label>
+        <label class="likert-option"><input type="radio" name="C3C4_disc" value="2" data-req="1"><span class="likert-btn">2</span></label>
+        <label class="likert-option"><input type="radio" name="C3C4_disc" value="3" data-req="1"><span class="likert-btn">3</span></label>
+        <label class="likert-option"><input type="radio" name="C3C4_disc" value="4" data-req="1"><span class="likert-btn">4</span></label>
+        <label class="likert-option"><input type="radio" name="C3C4_disc" value="5" data-req="1"><span class="likert-btn">5</span></label>
+      </div>
+      <div class="likert-labels" style="max-width:500px;"><span>전혀 아니다</span><span>보통</span><span>매우 그렇다</span></div>
+
+      <div style="margin-top:24px;">
+        <label style="font-weight:600;">개방형</label>
+        <p style="font-size:13px;color:var(--text-secondary);margin:6px 0 8px;">위 두 세트의 구분에 대한 의견이 있으시면 기술해 주십시오.</p>
+        <textarea name="C3C4_open" placeholder="의견을 입력해 주십시오. (선택)"></textarea>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-prev" onclick="prevPage()">← 이전</button>
+      <button class="btn btn-next" onclick="nextPage()">다음 →</button>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 4: 종합 의견 ═══ -->
+  <div class="survey-page" data-page="4">
+    <div class="section-card">
+      <div class="section-title">종합 의견</div>
+      <p style="margin-bottom:12px;">본 4라운드 설문 전체에 대한 의견이 있으시면 자유롭게 기술해 주십시오.</p>
+      <textarea name="E_open" placeholder="의견을 입력해 주십시오. (선택)" style="min-height:150px;"></textarea>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-prev" onclick="prevPage()">← 이전</button>
+      <button class="btn btn-submit" onclick="submitForm()">설문 제출</button>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE 5: 완료 ═══ -->
+  <div class="survey-page" data-page="5">
+    <div class="section-card">
+      <div class="completion">
+        <h2>✓ 제출이 완료되었습니다</h2>
+        <p>4라운드까지 참여해주셔서 진심으로 감사드립니다.<br>소중한 의견은 연구에 귀중하게 반영하겠습니다.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/*
+ * ┌─────────────────────────────────────────────────┐
+ * │  Google Sheets 연동 설정                          │
+ * │  1. Google Sheets 새로 생성                       │
+ * │  2. 확장 프로그램 → Apps Script                    │
+ * │  3. 아래 doPost 코드 붙여넣기                      │
+ * │  4. 배포 → 새 배포 → 웹 앱                        │
+ * │     - 액세스 권한: "모든 사용자"                    │
+ * │  5. 배포 URL을 아래 SHEET_URL에 붙여넣기           │
+ * └─────────────────────────────────────────────────┘
+ *
+ * --- Apps Script doPost 코드 ---
+ *
+ * var HEADERS = [
+ *   'timestamp','round','consent','name',
+ *   'C4R_1','C4R_2','C4R_3','C4R_4','C4R_5','C4R_6','C4R_7','C4R_8','C4R_open',
+ *   'C3C4_disc','C3C4_open',
+ *   'E_open'
+ * ];
+ *
+ * var LABELS = [
+ *   '제출시각','라운드','동의','성명',
+ *   'C4-R1 가짜뉴스','C4-R2 가짜인물','C4-R3 합성이미지','C4-R4 허위장면','C4-R5 묘사정확성','C4-R6 있는그대로','C4-R7 인물장소','C4-R8 과장축소','C4 개방형',
+ *   'C3C4 판별','C3C4 개방형',
+ *   '종합의견'
+ * ];
+ *
+ * function doPost(e) {
+ *   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+ *   if (sheet.getLastRow() === 0) {
+ *     sheet.appendRow(HEADERS);
+ *     sheet.appendRow(LABELS);
+ *     sheet.getRange(1,1,1,HEADERS.length).setFontWeight('bold').setBackground('#f0f0f0');
+ *     sheet.getRange(2,1,1,LABELS.length).setFontSize(9).setFontColor('#666666').setBackground('#fafafa');
+ *     sheet.setFrozenRows(2);
+ *   }
+ *   var data = JSON.parse(e.postData.contents);
+ *   var row = HEADERS.map(function(h) { return data[h] !== undefined ? data[h] : ''; });
+ *   sheet.appendRow(row);
+ *   return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+ * }
+ *
+ * function doGet(e) {
+ *   return ContentService.createTextOutput('Delphi R4 is running.').setMimeType(ContentService.MimeType.TEXT);
+ * }
+ *
+ * function setupHeaders() {
+ *   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+ *   if (sheet.getLastRow() > 0) sheet.clear();
+ *   sheet.appendRow(HEADERS);
+ *   sheet.appendRow(LABELS);
+ *   sheet.getRange(1,1,1,HEADERS.length).setFontWeight('bold').setBackground('#f0f0f0');
+ *   sheet.getRange(2,1,1,LABELS.length).setFontSize(9).setFontColor('#666666').setBackground('#fafafa');
+ *   sheet.setFrozenRows(2);
+ * }
+ */
+
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzQu1ONm924fcDHfgzeHogyAY5YISvmNySq-Z0SKKI_RDrdXu1IWl7yMf7JKKvM20Ld/exec';
+
+const REQUIRE = true; // 배포용: true / 프리뷰용: false
+const STORAGE_KEY = 'delphi_r4_draft';
+const TOTAL_PAGES = 6; // 0~5
+let currentPage = 0;
+
+function showPage(n) {
+  document.querySelectorAll('.survey-page').forEach(p => p.classList.remove('active'));
+  const target = document.querySelector(`[data-page="${n}"]`);
+  if (target) { target.classList.add('active'); currentPage = n; }
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  saveLocal();
+}
+
+function nextPage() {
+  if (REQUIRE && !validatePage(currentPage)) return;
+  if (currentPage < TOTAL_PAGES - 1) showPage(currentPage + 1);
+}
+
+function prevPage() {
+  if (currentPage > 0) showPage(currentPage - 1);
+}
+
+function validatePage(n) {
+  const page = document.querySelector(`[data-page="${n}"]`);
+  if (!page) return true;
+
+  // Page 0: consent + name
+  if (n === 0) {
+    const consent = page.querySelector('input[name="consent"]');
+    if (consent && !consent.checked) { showToast('연구 참여에 동의해 주십시오.'); return false; }
+    const name = page.querySelector('input[name="name"]');
+    if (name && !name.value.trim()) { showToast('성명을 입력해 주십시오.'); name.focus(); return false; }
+  }
+
+  // Likert required
+  const requiredRadios = new Set();
+  page.querySelectorAll('input[type="radio"][data-req="1"]').forEach(r => requiredRadios.add(r.name));
+  for (const name of requiredRadios) {
+    if (!page.querySelector(`input[name="${name}"]:checked`)) {
+      showToast('모든 문항에 응답해 주십시오.');
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function updateProgress() {
+  const pct = Math.round((currentPage / (TOTAL_PAGES - 1)) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = pct + '%';
+  document.getElementById('progressPages').textContent = (currentPage + 1) + ' / ' + TOTAL_PAGES;
+}
+
+function collectAllData() {
+  const data = {
+    timestamp: new Date().toISOString(),
+    round: '4R'
+  };
+  document.querySelectorAll('input[type="text"]').forEach(inp => {
+    if (inp.name) data[inp.name] = inp.value.trim();
+  });
+  document.querySelectorAll('input[type="radio"]:checked').forEach(r => {
+    data[r.name] = r.value;
+  });
+  document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+    data[cb.name] = cb.value;
+  });
+  document.querySelectorAll('textarea').forEach(ta => {
+    if (ta.name) data[ta.name] = ta.value.trim();
+  });
+  return data;
+}
+
+async function submitForm() {
+  if (REQUIRE && !validatePage(currentPage)) return;
+
+  const data = collectAllData();
+
+  if (SHEET_URL) {
+    try {
+      const btn = document.querySelector('.btn-submit');
+      btn.disabled = true;
+      btn.textContent = '제출 중...';
+      await fetch(SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      showPage(5);
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      showToast('제출 중 오류가 발생했습니다. 다시 시도해 주십시오.');
+      const btn = document.querySelector('.btn-submit');
+      btn.disabled = false;
+      btn.textContent = '설문 제출';
+    }
+  } else {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `delphi_r4_${data.name || 'response'}_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    showPage(5);
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// localStorage auto-save / restore
+function saveLocal() {
+  try {
+    const d = collectAllData();
+    d._page = currentPage;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+  } catch(e) {}
+}
+
+function loadLocal() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (!s) return;
+    const d = JSON.parse(s);
+    Object.keys(d).forEach(k => {
+      if (k.startsWith('_') || k === 'timestamp' || k === 'round') return;
+      const el = document.querySelector(`[name="${k}"]`);
+      if (!el) return;
+      if (el.type === 'radio') {
+        const r = document.querySelector(`input[name="${k}"][value="${d[k]}"]`);
+        if (r) r.checked = true;
+      } else if (el.type === 'checkbox') {
+        el.checked = d[k] === el.value;
+      } else {
+        el.value = d[k];
+      }
+    });
+    if (d._page && d._page > 0 && d._page < TOTAL_PAGES - 1) {
+      if (confirm('이전에 작성하던 응답이 있습니다. 이어서 작성하시겠습니까?\n(취소를 누르면 처음부터 시작합니다.)')) {
+        showPage(d._page);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  } catch(e) {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+// Auto-save on page unload
+window.addEventListener('beforeunload', saveLocal);
+setInterval(saveLocal, 60000);
+
+// Init
+showPage(0);
+loadLocal();
+</script>
+
+</body>
+</html>
